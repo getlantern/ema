@@ -22,14 +22,14 @@ type EMA struct {
 	v            int64
 }
 
-// NewEMA creates an EMA with initial value and alpha
-func NewEMA(initial float64, defaultAlpha float64) *EMA {
+// New creates an EMA with initial value and alpha
+func New(initial float64, defaultAlpha float64) *EMA {
 	return &EMA{defaultAlpha: defaultAlpha, v: scaleToInt(initial)}
 }
 
 // Like NewEMA but using time.Duration
-func NewEMADuration(initial time.Duration, alpha float64) *EMA {
-	return NewEMA(float64(initial), alpha)
+func NewDuration(initial time.Duration, alpha float64) *EMA {
+	return New(float64(initial), alpha)
 }
 
 // UpdateAlpha calculates and stores new EMA based on the duration and α

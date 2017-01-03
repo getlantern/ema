@@ -6,7 +6,7 @@ import (
 )
 
 func TestEMA(t *testing.T) {
-	e := NewEMA(0, 0.9)
+	e := New(0, 0.9)
 	assert.EqualValues(t, 0, e.Get())
 	assert.EqualValues(t, 9, e.Update(10))
 	assert.EqualValues(t, 9, e.Get())
