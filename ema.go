@@ -33,22 +33,23 @@ func NewDuration(initial time.Duration, alpha float64) *EMA {
 }
 
 // UpdateAlpha calculates and stores new EMA based on the duration and α
-// value passed in.
-func (e *EMA) UpdateAlpha(v float64, α float64) float64 {
+// value passed in. It returns the old and new values.
+func (e *EMA) UpdateAlpha(v float64, α float64) (float64, float64) {
 	oldEMA := scaleFromInt(atomic.LoadInt64(&e.v))
 	newEMA := (1-α)*oldEMA + α*v
 	atomic.StoreInt64(&e.v, scaleToInt(newEMA))
-	return newEMA
+	return oldEMA, newEMA
 }
 
 // like UpdateAlpha but using the default alpha
-func (e *EMA) Update(v float64) float64 {
+func (e *EMA) Update(v float64) (float64, float64) {
 	return e.UpdateAlpha(v, e.defaultAlpha)
 }
 
 // Like Update but using time.Duration
-func (e *EMA) UpdateDuration(v time.Duration) time.Duration {
-	return time.Duration(e.Update(float64(v)))
+func (e *EMA) UpdateDuration(v time.Duration) (time.Duration, time.Duration) {
+	old, new := e.Update(float64(v))
+	return time.Duration(old), time.Duration(new)
 }
 
 // Set sets the EMA directly.
