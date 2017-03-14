@@ -6,10 +6,13 @@ import (
 )
 
 func TestEMA(t *testing.T) {
-	e := New(0, 0.9)
-	assert.EqualValues(t, 0, e.Get())
-	assert.EqualValues(t, 9, e.Update(10))
-	assert.EqualValues(t, 9, e.Get())
-	assert.EqualValues(t, 18.9, e.UpdateDuration(20))
-	assert.EqualValues(t, 18.9, e.GetDuration().Nanoseconds())
+	defaultValue := float64(1.1235235)
+	e := New(defaultValue, 0.9)
+	assert.EqualValues(t, defaultValue, e.Get(), "Should return default value before it's been set")
+	assert.EqualValues(t, 10, e.Update(10), "First update should simply set value")
+	assert.EqualValues(t, 10, e.Get())
+	assert.EqualValues(t, 19, e.Update(20), "Second update should factor into moving average")
+	assert.EqualValues(t, 19, e.Get())
+	assert.EqualValues(t, 28.9, e.UpdateDuration(30))
+	assert.EqualValues(t, 28.9, e.GetDuration().Nanoseconds())
 }

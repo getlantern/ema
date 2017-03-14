@@ -4,6 +4,7 @@
 package ema
 
 import (
+	"math"
 	"sync/atomic"
 	"time"
 )
@@ -12,6 +13,8 @@ const (
 	// floating point values are stored to this scale (3 digits behind decimal
 	// point).
 	scale = 1000
+
+	unset = math.MinInt64
 )
 
 // ema holds the Exponential Moving Average of a float64 with a the given
@@ -19,25 +22,35 @@ const (
 // https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average.
 type EMA struct {
 	defaultAlpha float64
+	defaultValue float64
 	v            int64
 }
 
-// New creates an EMA with initial value and alpha
-func New(initial float64, defaultAlpha float64) *EMA {
-	return &EMA{defaultAlpha: defaultAlpha, v: scaleToInt(initial)}
+// New creates an EMA with the given default value and alpha
+func New(defaultValue float64, defaultAlpha float64) *EMA {
+	return &EMA{defaultAlpha: defaultAlpha, defaultValue: defaultValue, v: unset}
 }
 
 // Like NewEMA but using time.Duration
-func NewDuration(initial time.Duration, alpha float64) *EMA {
-	return New(float64(initial), alpha)
+func NewDuration(defaultValue time.Duration, defaultAlpha float64) *EMA {
+	return New(float64(defaultValue), defaultAlpha)
 }
 
 // UpdateAlpha calculates and stores new EMA based on the duration and α
 // value passed in.
 func (e *EMA) UpdateAlpha(v float64, α float64) float64 {
-	oldEMA := scaleFromInt(atomic.LoadInt64(&e.v))
-	newEMA := (1-α)*oldEMA + α*v
-	atomic.StoreInt64(&e.v, scaleToInt(newEMA))
+	oldInt := atomic.LoadInt64(&e.v)
+	var newInt int64
+	var newEMA float64
+	if oldInt == unset {
+		newInt = scaleToInt(v)
+		newEMA = v
+	} else {
+		oldEMA := scaleFromInt(oldInt)
+		newEMA = (1-α)*oldEMA + α*v
+		newInt = scaleToInt(newEMA)
+	}
+	atomic.StoreInt64(&e.v, newInt)
 	return newEMA
 }
 
@@ -61,9 +74,18 @@ func (e *EMA) SetDuration(v time.Duration) {
 	e.Set(float64(v))
 }
 
+// Clear clears the EMA
+func (e *EMA) Clear() {
+	atomic.StoreInt64(&e.v, unset)
+}
+
 // Get gets the EMA
 func (e *EMA) Get() float64 {
-	return scaleFromInt(atomic.LoadInt64(&e.v))
+	oldInt := atomic.LoadInt64(&e.v)
+	if oldInt == unset {
+		return e.defaultValue
+	}
+	return scaleFromInt(oldInt)
 }
 
 // Like Get but using time.Duration
