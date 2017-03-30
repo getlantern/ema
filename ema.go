@@ -17,7 +17,7 @@ const (
 	unset = math.MinInt64
 )
 
-// ema holds the Exponential Moving Average of a float64 with a the given
+// EMA holds the Exponential Moving Average of a float64 with a the given
 // default α value and a fixed scale of 3 digits. Safe to access concurrently.
 // https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average.
 type EMA struct {
@@ -31,7 +31,7 @@ func New(defaultValue float64, defaultAlpha float64) *EMA {
 	return &EMA{defaultAlpha: defaultAlpha, defaultValue: defaultValue, v: unset}
 }
 
-// Like NewEMA but using time.Duration
+// NewDuration is like New but using time.Duration
 func NewDuration(defaultValue time.Duration, defaultAlpha float64) *EMA {
 	return New(float64(defaultValue), defaultAlpha)
 }
@@ -54,12 +54,12 @@ func (e *EMA) UpdateAlpha(v float64, α float64) float64 {
 	return newEMA
 }
 
-// like UpdateAlpha but using the default alpha
+// Update is like UpdateAlpha but using the default alpha
 func (e *EMA) Update(v float64) float64 {
 	return e.UpdateAlpha(v, e.defaultAlpha)
 }
 
-// Like Update but using time.Duration
+// UpdateDuration is like Update but using time.Duration
 func (e *EMA) UpdateDuration(v time.Duration) time.Duration {
 	return time.Duration(e.Update(float64(v)))
 }
@@ -69,7 +69,7 @@ func (e *EMA) Set(v float64) {
 	atomic.StoreInt64(&e.v, scaleToInt(v))
 }
 
-// Like Set but using time.Duration
+// SetDuration is like Set but using time.Duration
 func (e *EMA) SetDuration(v time.Duration) {
 	e.Set(float64(v))
 }
@@ -88,7 +88,7 @@ func (e *EMA) Get() float64 {
 	return scaleFromInt(oldInt)
 }
 
-// Like Get but using time.Duration
+// GetDuration is like Get but using time.Duration
 func (e *EMA) GetDuration() time.Duration {
 	return time.Duration(e.Get())
 }
